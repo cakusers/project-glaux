@@ -11,9 +11,17 @@ config_version=5
 [application]
 
 config/name="Slasher"
-run/main_scene="res://player.tscn"
+run/main_scene="uid://x1iggxespys6"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=400
+window/size/window_width_override=1336
+window/size/window_height_override=768
+window/stretch/mode="viewport"
 
 [input]
 

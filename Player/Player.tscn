@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://cxrvpwl4vuwwf"]
+
+[ext_resource type="Script" uid="uid://cauuw306eljgc" path="res://Player/scipt/player.gd" id="1_onrkg"]
+[ext_resource type="Texture2D" uid="uid://fkvgqm6rl0bl" path="res://Player/assets/Idle.png" id="2_i3pqv"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_onrkg"]
+radius = 8.0
+height = 28.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_q3lat"]
+size = Vector2(21, 28)
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+script = ExtResource("1_onrkg")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_i3pqv")
+hframes = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_onrkg")
+
+[node name="Hitbox" type="Area2D" parent="."]
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+position = Vector2(18.5, 0)
+shape = SubResource("RectangleShape2D_q3lat")
+debug_color = Color(0.86208916, 0.26644588, 0.61754507, 0.41960785)
+
+[node name="ComboLabel" type="Label" parent="."]
+offset_left = -19.0
+offset_top = -35.0
+offset_right = 21.0
+offset_bottom = -12.0
+text = "x0"
+horizontal_alignment = 1
+vertical_alignment = 1
