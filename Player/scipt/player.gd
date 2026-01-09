@@ -1,13 +1,17 @@
 extends CharacterBody2D
 
 @export var speed: float = 200.0
+@export var max_hp = 5
+
 # Variabel Combo
 var combo_count = 0
 var is_attacking = false
 @onready var hitbox = $Hitbox # Mengambil node Hitbox
-
 @onready var combo_label = $ComboLabel
 
+# Variabel HP
+var current_hp = max_hp
+var is_invincible = false # Status kebal
 
 func _physics_process(_delta):
 	# Kita cegah pergerakan saat sedang menyerang agar tidak 'sliding'
@@ -41,9 +45,6 @@ func move_state():
 func attack_sequence():
 	is_attacking = true
 	
-	# Logika Combo Sederhana
-	combo_count += 1
-	update_combo_visual()
 	
 	# Nyalakan Hitbox
 	hitbox.monitoring = true
@@ -51,11 +52,19 @@ func attack_sequence():
 	# Kita tunggu 1 frame fisika agar Godot sempat mendeteksi tabrakan
 	await get_tree().physics_frame
 	
-	# Cek apakah ada musuh di dalam hitbox SAAT INI JUGA
 	var bodies = hitbox.get_overlapping_bodies()
+	var enemies_hit_this_frame = 0 # Untuk melacak apakah kita memukul sesuatu
+
 	for body in bodies:
-		if body.has_method("take_damage"):
-			body.take_damage()
+		if body != self and body.has_method("take_damage"):
+			body.take_damage(1)
+			
+			# [BARU] Tambah combo setiap kali loop menemukan musuh
+			combo_count += 1 
+			enemies_hit_this_frame += 1
+	
+	if enemies_hit_this_frame > 0:
+		update_combo_visual()
 	
 	# Durasi serangan (misal 0.2 detik)
 	await get_tree().create_timer(0.2).timeout
@@ -92,3 +101,31 @@ func reset_combo_after_delay():
 		# Hilangkan label pelan-pelan
 		var tween = create_tween()
 		tween.tween_property(combo_label, "modulate:a", 0.0, 0.2) # Fade out
+
+# --- FUNGSI BARU: MENERIMA DAMAGE DARI MUSUH ---
+func take_damage(amount):
+	if is_invincible: 
+		return # Jika sedang kebal, abaikan damage
+	
+	current_hp -= amount
+	print("Player HP: ", current_hp) # Cek di Output console
+	
+	if current_hp <= 0:
+		print("GAME OVER")
+		get_tree().reload_current_scene() # Restart game otomatis
+		return
+	
+	# Aktifkan I-Frames (Kebal sesaat)
+	start_invincibility()
+
+func start_invincibility():
+	is_invincible = true
+	# Efek kedap-kedip transparan
+	modulate.a = 0.4
+	
+	# Kebal selama 1 detik
+	await get_tree().create_timer(1.0).timeout 
+	 
+	# Kembali normal
+	modulate.a = 1.0
+	is_invincible = false

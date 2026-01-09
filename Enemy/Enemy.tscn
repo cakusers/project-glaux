@@ -12,7 +12,7 @@ metadata/_edit_group_ = true
 [node name="ColorRect" type="ColorRect" parent="."]
 offset_left = -20.0
 offset_top = -20.0
-color = Color(0.5254902, 0.078431375, 0.13333334, 1)
+color = Color(0.58157194, 0.7413681, 6.058795e-07, 1)
 metadata/_edit_use_anchors_ = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
