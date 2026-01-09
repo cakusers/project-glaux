@@ -8,10 +8,12 @@ var combo_count = 0
 var is_attacking = false
 @onready var hitbox = $Hitbox # Mengambil node Hitbox
 @onready var combo_label = $ComboLabel
+@onready var sword_sprite = $Hitbox/Sprite2D
 
 # Variabel HP
 var current_hp = max_hp
 var is_invincible = false # Status kebal
+var is_dead = false
 
 func _physics_process(_delta):
 	# Kita cegah pergerakan saat sedang menyerang agar tidak 'sliding'
@@ -44,7 +46,7 @@ func move_state():
 
 func attack_sequence():
 	is_attacking = true
-	
+	sword_sprite.visible = true
 	
 	# Nyalakan Hitbox
 	hitbox.monitoring = true
@@ -70,6 +72,7 @@ func attack_sequence():
 	await get_tree().create_timer(0.2).timeout
 	
 	# Matikan Hitbox dan reset status serang
+	sword_sprite.visible = false
 	hitbox.monitoring = false
 	is_attacking = false
 	
@@ -104,28 +107,43 @@ func reset_combo_after_delay():
 
 # --- FUNGSI BARU: MENERIMA DAMAGE DARI MUSUH ---
 func take_damage(amount):
-	if is_invincible: 
+	if is_dead or is_invincible:
 		return # Jika sedang kebal, abaikan damage
 	
 	current_hp -= amount
 	print("Player HP: ", current_hp) # Cek di Output console
 	
 	if current_hp <= 0:
-		print("GAME OVER")
-		get_tree().reload_current_scene() # Restart game otomatis
+		die()
 		return
 	
 	# Aktifkan I-Frames (Kebal sesaat)
 	start_invincibility()
 
 func start_invincibility():
+	if not is_inside_tree():
+		return
+	
 	is_invincible = true
 	# Efek kedap-kedip transparan
 	modulate.a = 0.4
 	
 	# Kebal selama 1 detik
-	await get_tree().create_timer(1.0).timeout 
+	if get_tree():
+		await get_tree().create_timer(1.0).timeout 
 	 
 	# Kembali normal
 	modulate.a = 1.0
 	is_invincible = false
+
+
+func die():
+	is_dead = true # PENTING: Kunci status mati agar tidak terpanggil 2x
+	print("GAME OVER")
+	
+	# Matikan collision agar musuh tidak bisa nabrak mayat player lagi
+	$CollisionShape2D.set_deferred("disabled", true)
+	
+	# Safety check: Pastikan Tree masih ada sebelum reload
+	if get_tree():
+		get_tree().reload_current_scene()
