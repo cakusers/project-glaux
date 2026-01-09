@@ -6,6 +6,9 @@ var combo_count = 0
 var is_attacking = false
 @onready var hitbox = $Hitbox # Mengambil node Hitbox
 
+@onready var combo_label = $ComboLabel
+
+
 func _physics_process(_delta):
 	# Kita cegah pergerakan saat sedang menyerang agar tidak 'sliding'
 	if not is_attacking:
@@ -40,7 +43,7 @@ func attack_sequence():
 	
 	# Logika Combo Sederhana
 	combo_count += 1
-	print("Combo: ", combo_count) # Cek di panel Output nanti
+	update_combo_visual()
 	
 	# Nyalakan Hitbox
 	hitbox.monitoring = true
@@ -64,12 +67,28 @@ func attack_sequence():
 	# Reset Combo jika pemain diam terlalu lama (mekanik combo reset)
 	reset_combo_after_delay()
 
+# --- FUNGSI BARU UNTUK VISUAL ---
+func update_combo_visual():
+	# Update teks
+	combo_label.text = "x" + str(combo_count)
+	
+	# Animasi sederhana menggunakan Tween (Godot 4)
+	var tween = create_tween()
+	
+	# 1. Pastikan label terlihat (Alpha = 1) dan sedikit membesar
+	combo_label.modulate.a = 1.0 
+	combo_label.scale = Vector2(1.5, 1.5)
+	
+	# 2. Animasi mengecil kembali ke ukuran normal (efek "Pop")
+	tween.tween_property(combo_label, "scale", Vector2(1.0, 1.0), 0.1)
+
 func reset_combo_after_delay():
-	# Simpan nomor combo saat ini
 	var current_combo = combo_count
-	# Tunggu 1 detik
 	await get_tree().create_timer(1.0).timeout
-	# Jika combo masih sama (berarti player tidak menyerang lagi), reset ke 0
+	
+	# Jika combo tidak bertambah (pemain berhenti nyerang)
 	if combo_count == current_combo:
 		combo_count = 0
-		print("Combo Reset")
+		# Hilangkan label pelan-pelan
+		var tween = create_tween()
+		tween.tween_property(combo_label, "modulate:a", 0.0, 0.2) # Fade out

@@ -8,7 +8,7 @@ radius = 8.0
 height = 28.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q3lat"]
-size = Vector2(21, 28)
+size = Vector2(28, 28)
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("1_onrkg")
@@ -25,15 +25,17 @@ shape = SubResource("CapsuleShape2D_onrkg")
 monitoring = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
-position = Vector2(18.5, 0)
+position = Vector2(22, 0)
 shape = SubResource("RectangleShape2D_q3lat")
 debug_color = Color(0.86208916, 0.26644588, 0.61754507, 0.41960785)
 
 [node name="ComboLabel" type="Label" parent="."]
-offset_left = -19.0
-offset_top = -35.0
-offset_right = 21.0
-offset_bottom = -12.0
+modulate = Color(1, 1, 1, 0)
+offset_left = -18.0
+offset_top = -32.0
+offset_right = 18.0
+offset_bottom = -15.0
+theme_override_font_sizes/font_size = 12
 text = "x0"
 horizontal_alignment = 1
 vertical_alignment = 1
