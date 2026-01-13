@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3 uid="uid://dww4jsd5ka1s3"]
+
+[ext_resource type="Script" uid="uid://diey6evmclkr7" path="res://Menu/hud.gd" id="1_3k8wv"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_3k8wv")
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 45.0
+step = 1.0
+value = 100.0
+show_percentage = false
+
+[node name="ComboLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -97.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 43.0
+grow_horizontal = 0
+text = "Combo : 0"

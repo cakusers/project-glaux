@@ -2,10 +2,11 @@
 
 [ext_resource type="Script" uid="uid://dt8xhtytwrgqe" path="res://Enemy/script/enemy.gd" id="1_2pb1h"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_px1sc"]
+[sub_resource type="CircleShape2D" id="CircleShape2D_3o4wt"]
 
 [node name="Enemy" type="CharacterBody2D"]
 position = Vector2(10, 10)
+collision_layer = 4
 script = ExtResource("1_2pb1h")
 metadata/_edit_group_ = true
 
@@ -17,4 +18,4 @@ metadata/_edit_use_anchors_ = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-10, -10)
-shape = SubResource("RectangleShape2D_px1sc")
+shape = SubResource("CircleShape2D_3o4wt")

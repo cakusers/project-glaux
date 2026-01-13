@@ -23,6 +23,7 @@ hframes = 4
 shape = SubResource("CapsuleShape2D_onrkg")
 
 [node name="Hitbox" type="Area2D" parent="."]
+collision_mask = 5
 monitoring = false
 
 [node name="Sprite2D" type="Sprite2D" parent="Hitbox"]

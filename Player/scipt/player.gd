@@ -1,5 +1,8 @@
 extends CharacterBody2D
 
+signal health_changed(new_hp, max_hp) # Sinyal untuk HP
+signal combo_changed(new_count)       # Sinyal untuk Combo
+
 @export var speed: float = 200.0
 @export var max_hp = 5
 
@@ -14,6 +17,10 @@ var is_attacking = false
 var current_hp = max_hp
 var is_invincible = false # Status kebal
 var is_dead = false
+
+# Knockback
+var knockback = Vector2.ZERO
+@export var knockback_friction = 15.0 # Semakin besar, semakin cepat berhenti terseret
 
 func _physics_process(_delta):
 	# Kita cegah pergerakan saat sedang menyerang agar tidak 'sliding'
@@ -31,9 +38,17 @@ func move_state():
 		velocity = direction * speed
 		# Opsional: Memutar hitbox mengikuti arah jalan
 		# Jika jalan ke kiri, hitbox pindah ke kiri, dst.
-		rotation = direction.angle() 
+		hitbox.rotation = direction.angle()
 	else:
 		velocity = Vector2.ZERO
+		
+	# [BARU] 2. Tambahkan efek Knockback
+	# Kurangi kekuatan knockback setiap frame (efek gesekan)
+	knockback = knockback.move_toward(Vector2.ZERO, knockback_friction)
+	
+	# Gabungkan velocity jalan + velocity terpental
+	velocity += knockback
+	
 	move_and_slide()
 
 #func move_state() -> void:
@@ -61,9 +76,17 @@ func attack_sequence():
 		if body != self and body.has_method("take_damage"):
 			body.take_damage(1)
 			
+			# [BARU] Kirim efek knockback
+			if body.has_method("apply_knockback"):
+				# Parameter 1: Posisi Player (sumber dorongan)
+				# Parameter 2: Kekuatan dorongan (misal 300 - 500)
+				body.apply_knockback(global_position, 500.0)
+			
 			# [BARU] Tambah combo setiap kali loop menemukan musuh
 			combo_count += 1 
 			enemies_hit_this_frame += 1
+			
+			combo_changed.emit(combo_count)
 	
 	if enemies_hit_this_frame > 0:
 		update_combo_visual()
@@ -101,9 +124,12 @@ func reset_combo_after_delay():
 	# Jika combo tidak bertambah (pemain berhenti nyerang)
 	if combo_count == current_combo:
 		combo_count = 0
+		# [BARU] Lapor ke HUD kalau Combo reset jadi 0
+		combo_changed.emit(combo_count)
+		
 		# Hilangkan label pelan-pelan
-		var tween = create_tween()
-		tween.tween_property(combo_label, "modulate:a", 0.0, 0.2) # Fade out
+		#var tween = create_tween()
+		#tween.tween_property(combo_label, "modulate:a", 0.0, 0.2) # Fade out
 
 # --- FUNGSI BARU: MENERIMA DAMAGE DARI MUSUH ---
 func take_damage(amount):
@@ -111,7 +137,7 @@ func take_damage(amount):
 		return # Jika sedang kebal, abaikan damage
 	
 	current_hp -= amount
-	print("Player HP: ", current_hp) # Cek di Output console
+	health_changed.emit(current_hp, max_hp)
 	
 	if current_hp <= 0:
 		die()
@@ -147,3 +173,9 @@ func die():
 	# Safety check: Pastikan Tree masih ada sebelum reload
 	if get_tree():
 		get_tree().reload_current_scene()
+
+# [BARU] Fungsi untuk menerima dorongan dari musuh
+func apply_knockback(source_position, force_amount):
+	# Hitung arah dari Musuh menuju Player
+	var direction = (global_position - source_position).normalized()
+	knockback = direction * force_amount
