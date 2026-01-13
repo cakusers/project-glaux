@@ -8,6 +8,7 @@
 position = Vector2(10, 10)
 collision_layer = 4
 script = ExtResource("1_2pb1h")
+speed = 80.0
 metadata/_edit_group_ = true
 
 [node name="ColorRect" type="ColorRect" parent="."]

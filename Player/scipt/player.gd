@@ -18,11 +18,19 @@ var current_hp = max_hp
 var is_invincible = false # Status kebal
 var is_dead = false
 
+# Regen
+@export var regen_wait_time = 1.0  # Harus diam berapa detik sebelum regen mulai?
+@export var regen_amount = 1       # Berapa HP yang dipulihkan?
+@export var regen_interval = 1.0   # Seberapa cepat HP nambah? (Tiap 1 detik)
+
+var idle_timer = 0.0               # Menghitung berapa lama kita sudah diam
+var regen_tick_timer = 0.0         # Menghitung jeda antar penambahan H
+
 # Knockback
 var knockback = Vector2.ZERO
 @export var knockback_friction = 15.0 # Semakin besar, semakin cepat berhenti terseret
 
-func _physics_process(_delta):
+func _physics_process(delta):
 	# Kita cegah pergerakan saat sedang menyerang agar tidak 'sliding'
 	if not is_attacking:
 		move_state()
@@ -31,6 +39,8 @@ func _physics_process(_delta):
 	if Input.is_action_just_pressed("attack") and not is_attacking:
 		print('sedang menyerang')
 		attack_sequence()
+	
+	handle_regeneration(delta)
 
 func move_state():
 	var direction = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
@@ -136,6 +146,9 @@ func take_damage(amount):
 	if is_dead or is_invincible:
 		return # Jika sedang kebal, abaikan damage
 	
+	# [BARU] Reset timer regen karena kita baru saja diserang!
+	idle_timer = 0.0
+	
 	current_hp -= amount
 	health_changed.emit(current_hp, max_hp)
 	
@@ -179,3 +192,53 @@ func apply_knockback(source_position, force_amount):
 	# Hitung arah dari Musuh menuju Player
 	var direction = (global_position - source_position).normalized()
 	knockback = direction * force_amount
+
+# Fungsi untuk menyembuhkan player
+func heal(amount):
+	if is_dead: return # Tidak bisa heal kalau sudah mati
+	
+	# Tambah HP
+	current_hp += amount
+	
+	# Pastikan tidak melebihi Max HP
+	if current_hp > max_hp:
+		current_hp = max_hp
+	
+	# PENTING: Lapor ke HUD agar Health Bar update
+	health_changed.emit(current_hp, max_hp)
+	
+	print("Regen! HP: ", current_hp) # Cek output
+	
+	# (Opsional) Efek visual healing
+	modulate = Color.GREEN
+	var tween = create_tween()
+	tween.tween_property(self, "modulate", Color.WHITE, 0.3)
+
+func handle_regeneration(delta):
+	# Syarat:
+	# 1. HP belum penuh
+	# 2. Tidak sedang mati
+	if current_hp >= max_hp or is_dead:
+		idle_timer = 0.0 # Reset biar bersih
+		return
+
+	# Cek apakah Player sedang "Sibuk" (Bergerak ATAU Menyerang)
+	# velocity.length() > 10.0 artinya sedang bergerak (kita kasih toleransi sedikit biar gak sensitif banget)
+	var is_busy = velocity.length() > 10.0 or is_attacking
+	
+	if is_busy:
+		# Jika sibuk, reset timer
+		idle_timer = 0.0
+		regen_tick_timer = 0.0
+	else:
+		# Jika diam, jalankan timer
+		idle_timer += delta
+		
+		# Jika sudah diam lebih lama dari batas waktu tunggu
+		if idle_timer >= regen_wait_time:
+			# Mulai hitung interval per "tik" (misal nambah darah tiap 1 detik)
+			regen_tick_timer += delta
+			
+			if regen_tick_timer >= regen_interval:
+				heal(regen_amount)
+				regen_tick_timer = 0.0 # Reset tik untuk healing berikutnya

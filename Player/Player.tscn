@@ -9,7 +9,7 @@ radius = 8.0
 height = 28.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q3lat"]
-size = Vector2(22, 10)
+size = Vector2(22, 28)
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("1_onrkg")
@@ -48,3 +48,8 @@ theme_override_font_sizes/font_size = 12
 text = "x0"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(1.2, 1.2)
+position_smoothing_enabled = true
+position_smoothing_speed = 10.0
