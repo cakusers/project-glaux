@@ -2,12 +2,14 @@ extends CharacterBody2D
 class_name Player
 
 signal combo_changed(new_count)
+signal player_has_died
 
 @export var speed: float = 200.0
 
 @onready var combat_comp = $CombatComponent
 @onready var health_comp = $HealthComponent
 @onready var regen_comp = $RegenComponent
+@onready var move_comp = $MovementComponent
 
 # Knockback
 var knockback = Vector2.ZERO
@@ -20,40 +22,28 @@ func _ready():
 	
 	health_comp.died.connect(_on_died)
 	health_comp.invincibility_changed.connect(_on_invincibility_changed)
-	
 	health_comp.healed.connect(_on_healed)
 
 func _physics_process(delta):
-	# Kita cegah pergerakan saat sedang menyerang agar tidak 'sliding'
-	if not combat_comp.is_attacking:
-		move_state()
-	
 	# Cek input serangan
 	if Input.is_action_just_pressed("attack"):
 		combat_comp.attack()
 	
-	var is_moving = velocity.length() > 10.0
-	var is_attacking = combat_comp.is_attacking
-	
-	regen_comp.handle_regen_logic(delta, is_moving or is_attacking)
-
-func move_state():
-	var direction = Vector2.ZERO
-	direction.x = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
-	direction.y = Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
-	
-	if direction:
-		combat_comp.rotation = direction.angle()
+	if not combat_comp.is_attacking:
+		var direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		
-	velocity = direction.normalized() * speed
+		# Rotasi pedang (Visual) tetap diatur Player karena ini preferensi input
+		if direction:
+			combat_comp.rotation = direction.angle()
+		
+		# Suruh komponen bergerak sesuai arah input
+		move_comp.move(direction)
+	else:
+		# Kalau nyerang, diam (kirim Vector2.ZERO), tapi knockback tetap jalan di dalam component
+		move_comp.move(Vector2.ZERO)
 	
-	# Kurangi kekuatan knockback setiap frame (efek gesekan)
-	knockback = knockback.move_toward(Vector2.ZERO, knockback_friction)
-	
-	# Gabungkan velocity jalan + velocity terpental
-	velocity += knockback
-	
-	move_and_slide()
+	var is_moving = velocity.length() > 10.0
+	regen_comp.handle_regen_logic(delta, is_moving or combat_comp.is_attacking)
 
 func take_damage(amount):
 	regen_comp.reset_regen()
@@ -97,7 +87,5 @@ func die():
 		get_tree().reload_current_scene()
 
 # [BARU] Fungsi untuk menerima dorongan dari musuh
-func apply_knockback(source_position, force_amount):
-	# Hitung arah dari Musuh menuju Player
-	var direction = (global_position - source_position).normalized()
-	knockback = direction * force_amount
+func apply_knockback(source_pos, force):
+	move_comp.apply_knockback(source_pos, force)

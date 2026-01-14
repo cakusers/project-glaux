@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://dxf1daw1f4vhe"]
+[gd_scene load_steps=5 format=3 uid="uid://dxf1daw1f4vhe"]
 
 [ext_resource type="Script" uid="uid://dt8xhtytwrgqe" path="res://entities/Enemy/script/enemy.gd" id="1_2pb1h"]
 [ext_resource type="PackedScene" uid="uid://bs7e5xksucycg" path="res://entities/shared/components/health/HealthComponent.tscn" id="2_mvb52"]
+[ext_resource type="PackedScene" uid="uid://be48i4wfalh6x" path="res://entities/shared/components/movement/MovementComponent.tscn" id="3_lnuim"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_3o4wt"]
 
@@ -9,7 +10,7 @@
 position = Vector2(10, 10)
 collision_layer = 4
 script = ExtResource("1_2pb1h")
-speed = 80.0
+attack_cooldown = 0.6
 metadata/_edit_group_ = true
 
 [node name="ColorRect" type="ColorRect" parent="."]
@@ -24,3 +25,6 @@ shape = SubResource("CircleShape2D_3o4wt")
 
 [node name="HealthComponent" parent="." instance=ExtResource("2_mvb52")]
 max_hp = 2
+
+[node name="MovementComponent" parent="." instance=ExtResource("3_lnuim")]
+speed = 100.0

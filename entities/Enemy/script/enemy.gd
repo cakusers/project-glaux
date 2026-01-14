@@ -1,60 +1,87 @@
 extends CharacterBody2D
+class_name Enemy
 
-@export var speed = 100.0
-
+# --- COMPONENTS ---
 @onready var health_comp = $HealthComponent
+@onready var move_comp = $MovementComponent # <--- BARU
 
-var player = null
+# --- VARIABLES ---
+var player: Player = null # Kita pakai Tipe Data 'Player' agar autocompletion jalan
 
-var knockback = Vector2.ZERO
-@export var knockback_power = 300.0
-@export var knockback_friction = 10.0 # Seberapa cepat musuh berhenti terpental
+# Konfigurasi Serangan
+@export var damage_amount: int = 1
+@export var attack_knockback_force: float = 400.0
+var is_attacking: bool = false
+@export var attack_cooldown: float = 0.3
 
 func _ready():
-	# Mencari node pertama yang ada di grup "player"
 	player = get_tree().get_first_node_in_group("player")
-	health_comp.died.connect(func(): queue_free())
+	
+	# Sambungkan Sinyal
+	health_comp.died.connect(_on_died)
+	health_comp.damaged.connect(_on_damaged) # Untuk efek visual
 
 func _physics_process(_delta):
-	knockback = knockback.move_toward(Vector2.ZERO, knockback_friction)
 	
+	if is_attacking:
+		move_comp.move(Vector2.ZERO) # Diam di tempat
+		return # Stop script di sini, jangan cek tabrakan lagi
+	
+	# 1. HANDLE MOVEMENT (Lewat Component)
 	if player:
 		var direction = (player.global_position - global_position).normalized()
-		velocity = (direction * speed) + knockback
-		move_and_slide()
+		move_comp.move(direction)
+	else:
+		move_comp.move(Vector2.ZERO)
 		
-		# Logika sederhana: Jika bersentuhan dengan player, lukai player
-		# Kita gunakan get_slide_collision untuk mendeteksi tabrakan fisik
-		for i in get_slide_collision_count():
-			var collision = get_slide_collision(i)
-			var collider = collision.get_collider()
-			# Cek apakah yang ditabrak adalah Player
-			if collider.is_in_group("player"):
-					# 1. Deal Damage
-				if collider.has_method("take_damage"):
-					collider.take_damage(1)
-				
-				# [BARU] 2. Berikan Knockback ke Player
-				if collider.has_method("apply_knockback"):
-					# Dorong Player menjauh dari posisi Musuh ini
-					# Angka 400.0 adalah kekuatan dorong (bisa diatur)
-					collider.apply_knockback(global_position, knockback_power)
-			
-			#if collider.is_in_group("player") and collider.has_method("take_damage"):
-				#collider.take_damage(1) # Musuh deal 1 damage ke player
+	# 2. HANDLE ATTACK
+	check_contact_damage()
 
+# Fungsi logika serangan (Menabrak Player)
+func check_contact_damage():
+	# Kita cek semua tabrakan fisik saat ini
+	for i in get_slide_collision_count():
+		var collision = get_slide_collision(i)
+		var collider = collision.get_collider()
+		
+		# Gunakan class_name 'Player' untuk pengecekan yang lebih elegan
+		if collider is Player:
+			attack_target(collider)
+
+# --- FUNGSI SIGNAL RECEIVER ---
+func attack_target(target: Player):
+	if is_attacking: return # Cegah serangan spam
+	
+	is_attacking = true
+	
+	# 1. Deal Damage & Knockback
+	target.take_damage(damage_amount)
+	target.apply_knockback(global_position, attack_knockback_force)
+	
+	# 2. Musuh Mundur Sedikit (Opsional, biar gak nempel banget)
+	# move_comp.apply_knockback(target.global_position, 200.0) 
+	
+	# 3. Tunggu Cooldown
+	await get_tree().create_timer(attack_cooldown).timeout
+	
+	# 4. Selesai Cooldown, boleh kejar lagi
+	is_attacking = false
+
+
+# Wrapper agar Player bisa memukul Musuh (PENTING)
 func take_damage(amount):
 	health_comp.damage(amount)
-	
-	# Efek Visual Flash Merah (bisa manual di sini atau via sinyal damaged)
+
+# Wrapper agar Player bisa mendorong Musuh (PENTING)
+func apply_knockback(source_pos, force):
+	move_comp.apply_knockback(source_pos, force)
+
+func _on_damaged(amount):
+	# Efek Visual Flash Merah
 	modulate = Color.RED
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", Color.WHITE, 0.1)
 
-# [BARU] Fungsi untuk menerima dorongan
-func apply_knockback(source_position, force_amount):
-	# Hitung arah: Dari PENYERANG (Player) menuju KORBAN (Enemy)
-	var direction = (global_position - source_position).normalized()
-	
-	# Set knockback vector
-	knockback = direction * force_amount
+func _on_died():
+	# Efek partikel mati bisa ditaruh di sini
+	queue_free()
