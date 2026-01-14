@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bj2l3vuwmhasr"]
+
+[ext_resource type="Script" uid="uid://dtj2nyxd0glkk" path="res://entities/Player/components/regen/regen_component.gd" id="1_5pivi"]
+
+[node name="RegenComponent" type="Node2D"]
+script = ExtResource("1_5pivi")

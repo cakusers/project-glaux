@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://4wf6yvg1aldo"
-path="res://.godot/imported/Sword.png-06e3dbf6d85b1f7bceedab6a88687996.ctex"
+uid="uid://fkvgqm6rl0bl"
+path="res://.godot/imported/Idle.png-7923acc72ff0076e59b7cdf378fa89b8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Player/assets/Sword.png"
-dest_files=["res://.godot/imported/Sword.png-06e3dbf6d85b1f7bceedab6a88687996.ctex"]
+source_file="res://entities/Player/assets/Idle.png"
+dest_files=["res://.godot/imported/Idle.png-7923acc72ff0076e59b7cdf378fa89b8.ctex"]
 
 [params]
 

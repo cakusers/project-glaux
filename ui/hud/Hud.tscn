@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dww4jsd5ka1s3"]
 
-[ext_resource type="Script" uid="uid://diey6evmclkr7" path="res://Menu/hud.gd" id="1_3k8wv"]
+[ext_resource type="Script" uid="uid://diey6evmclkr7" path="res://ui/hud/hud.gd" id="1_3k8wv"]
 
 [node name="HUD" type="CanvasLayer"]
 process_mode = 3

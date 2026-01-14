@@ -1,9 +1,9 @@
 extends CharacterBody2D
 
 @export var speed = 100.0
-@export var max_hp = 3
 
-var hp = max_hp
+@onready var health_comp = $HealthComponent
+
 var player = null
 
 var knockback = Vector2.ZERO
@@ -13,6 +13,7 @@ var knockback = Vector2.ZERO
 func _ready():
 	# Mencari node pertama yang ada di grup "player"
 	player = get_tree().get_first_node_in_group("player")
+	health_comp.died.connect(func(): queue_free())
 
 func _physics_process(_delta):
 	knockback = knockback.move_toward(Vector2.ZERO, knockback_friction)
@@ -43,15 +44,12 @@ func _physics_process(_delta):
 				#collider.take_damage(1) # Musuh deal 1 damage ke player
 
 func take_damage(amount):
-	hp -= amount
+	health_comp.damage(amount)
 	
-	# Efek Visual: Flash Merah
+	# Efek Visual Flash Merah (bisa manual di sini atau via sinyal damaged)
 	modulate = Color.RED
 	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color.WHITE, 0.1) # Kembali putih dalam 0.1 detik
-	
-	if hp <= 0:
-		die()
+	tween.tween_property(self, "modulate", Color.WHITE, 0.1)
 
 # [BARU] Fungsi untuk menerima dorongan
 func apply_knockback(source_position, force_amount):
@@ -60,7 +58,3 @@ func apply_knockback(source_position, force_amount):
 	
 	# Set knockback vector
 	knockback = direction * force_amount
-
-func die():
-	# Bisa tambah efek partikel meledak di sini nanti
-	queue_free()
