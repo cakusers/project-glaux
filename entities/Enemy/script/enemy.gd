@@ -4,6 +4,7 @@ class_name Enemy
 # --- COMPONENTS ---
 @onready var health_comp = $HealthComponent
 @onready var move_comp = $MovementComponent # <--- BARU
+@onready var attack_area = $AttackArea
 
 # --- VARIABLES ---
 var player: Player = null # Kita pakai Tipe Data 'Player' agar autocompletion jalan
@@ -20,6 +21,7 @@ func _ready():
 	# Sambungkan Sinyal
 	health_comp.died.connect(_on_died)
 	health_comp.damaged.connect(_on_damaged) # Untuk efek visual
+	attack_area.body_entered.connect(_on_attack_area_body_entered)
 
 func _physics_process(_delta):
 	
@@ -33,9 +35,6 @@ func _physics_process(_delta):
 		move_comp.move(direction)
 	else:
 		move_comp.move(Vector2.ZERO)
-		
-	# 2. HANDLE ATTACK
-	check_contact_damage()
 
 # Fungsi logika serangan (Menabrak Player)
 func check_contact_damage():
@@ -49,23 +48,29 @@ func check_contact_damage():
 			attack_target(collider)
 
 # --- FUNGSI SIGNAL RECEIVER ---
+func _on_attack_area_body_entered(body):
+	# Jika yang masuk ke area adalah Player, dan kita tidak sedang cooldown
+	if body is Player and not is_attacking:
+		attack_target(body)
+		
 func attack_target(target: Player):
-	if is_attacking: return # Cegah serangan spam
-	
 	is_attacking = true
 	
-	# 1. Deal Damage & Knockback
+	# Deal Damage & Knockback
 	target.take_damage(damage_amount)
 	target.apply_knockback(global_position, attack_knockback_force)
 	
-	# 2. Musuh Mundur Sedikit (Opsional, biar gak nempel banget)
-	# move_comp.apply_knockback(target.global_position, 200.0) 
-	
-	# 3. Tunggu Cooldown
+	# Tunggu Cooldown
 	await get_tree().create_timer(attack_cooldown).timeout
-	
-	# 4. Selesai Cooldown, boleh kejar lagi
 	is_attacking = false
+	
+	# [TAMBAHAN CERDAS]
+	# Setelah cooldown selesai, cek lagi apakah Player MASIH ada di dalam area?
+	# Kalau masih nempel, pukul lagi!
+	var overlapping_bodies = attack_area.get_overlapping_bodies()
+	for body in overlapping_bodies:
+		if body is Player:
+			_on_attack_area_body_entered(body) # Panggil fungsi serangan lagi
 
 
 # Wrapper agar Player bisa memukul Musuh (PENTING)

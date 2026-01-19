@@ -25,6 +25,8 @@ func _ready():
 	health_comp.healed.connect(_on_healed)
 
 func _physics_process(delta):
+	
+	combat_comp.look_at(get_global_mouse_position())
 	# Cek input serangan
 	if Input.is_action_just_pressed("attack"):
 		combat_comp.attack()
@@ -32,18 +34,28 @@ func _physics_process(delta):
 	if not combat_comp.is_attacking:
 		var direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		
-		# Rotasi pedang (Visual) tetap diatur Player karena ini preferensi input
-		if direction:
-			combat_comp.rotation = direction.angle()
 		
 		# Suruh komponen bergerak sesuai arah input
 		move_comp.move(direction)
-	else:
-		# Kalau nyerang, diam (kirim Vector2.ZERO), tapi knockback tetap jalan di dalam component
-		move_comp.move(Vector2.ZERO)
+	
+	update_sprite_direction()
 	
 	var is_moving = velocity.length() > 10.0
 	regen_comp.handle_regen_logic(delta, is_moving or combat_comp.is_attacking)
+
+func update_sprite_direction():
+	# Cek posisi mouse relatif terhadap player
+	var mouse_x = get_global_mouse_position().x
+	var player_x = global_position.x
+	
+	# Jika mouse ada di kiri player, flip sprite
+	# Asumsi node sprite bernama 'Sprite2D'
+	if mouse_x < player_x:
+		$Sprite2D.flip_h = true
+		# PENTING: Jika sprite dibalik, posisi CombatComponent mungkin perlu disesuaikan
+		# atau biarkan CombatComponent menangani rotasinya sendiri (karena kita pakai look_at)
+	else:
+		$Sprite2D.flip_h = false
 
 func take_damage(amount):
 	regen_comp.reset_regen()

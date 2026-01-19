@@ -8,8 +8,8 @@
 [ext_resource type="PackedScene" uid="uid://be48i4wfalh6x" path="res://entities/shared/components/movement/MovementComponent.tscn" id="6_6jj1d"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_onrkg"]
-radius = 8.0
-height = 24.0
+radius = 7.0
+height = 14.0
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("1_onrkg")
@@ -38,3 +38,4 @@ health_comp = NodePath("../HealthComponent")
 regen_wait_time = 1.5
 
 [node name="MovementComponent" parent="." instance=ExtResource("6_6jj1d")]
+knockback_friction = 12.0

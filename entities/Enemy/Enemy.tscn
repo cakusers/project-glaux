@@ -1,17 +1,20 @@
-[gd_scene load_steps=5 format=3 uid="uid://dxf1daw1f4vhe"]
+[gd_scene load_steps=6 format=3 uid="uid://dxf1daw1f4vhe"]
 
 [ext_resource type="Script" uid="uid://dt8xhtytwrgqe" path="res://entities/Enemy/script/enemy.gd" id="1_2pb1h"]
 [ext_resource type="PackedScene" uid="uid://bs7e5xksucycg" path="res://entities/shared/components/health/HealthComponent.tscn" id="2_mvb52"]
 [ext_resource type="PackedScene" uid="uid://be48i4wfalh6x" path="res://entities/shared/components/movement/MovementComponent.tscn" id="3_lnuim"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_3o4wt"]
+radius = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_lnuim"]
 
 [node name="Enemy" type="CharacterBody2D"]
 position = Vector2(10, 10)
 collision_layer = 4
 script = ExtResource("1_2pb1h")
+attack_knockback_force = 200.0
 attack_cooldown = 0.6
-metadata/_edit_group_ = true
 
 [node name="ColorRect" type="ColorRect" parent="."]
 offset_left = -20.0
@@ -28,3 +31,9 @@ max_hp = 2
 
 [node name="MovementComponent" parent="." instance=ExtResource("3_lnuim")]
 speed = 100.0
+
+[node name="AttackArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea"]
+position = Vector2(-10, -10)
+shape = SubResource("CircleShape2D_lnuim")
